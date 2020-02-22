@@ -117,18 +117,22 @@ module emu
 	// 1 - D-/TX
 	// 2..6 - USR2..USR6
 	// Set USER_OUT to 1 to read from USER_IN.
-   output  	     USER_OSD,
+    output        USER_OSD,
+    output	      USER_MODE,
 	input   [7:0] USER_IN,
 	output  [7:0] USER_OUT,
 
 	input         OSD_STATUS
 );
-wire [5:0] joy_raw = {USER_IN[6],USER_IN[3],USER_IN[5],USER_IN[7],USER_IN[1],USER_IN[2]};
-
-assign USER_OSD = joy_raw[5];
 
 assign ADC_BUS  = 'Z;
-assign USER_OUT = '1;
+
+wire   joy_split, joy_mdsel;
+wire   [5:0] joy_in = {USER_IN[6],USER_IN[3],USER_IN[5],USER_IN[7],USER_IN[1],USER_IN[2]};
+assign USER_OUT  = {3'b111,joy_split,3'b111,joy_mdsel};//|status[31:30] ? {3'b111,joy_split,3'b111,joy_mdsel} : '1;
+assign USER_MODE = 1'b1;//|status[31:30] ;
+assign USER_OSD = joydb9md_1[4];
+
 assign {UART_RTS, UART_TXD, UART_DTR} = 0;
 assign {SD_SCK, SD_MOSI, SD_CS} = 'Z;
 
@@ -166,6 +170,17 @@ wire  [1:0] buttons;
 wire [31:0] status;
 wire [10:0] ps2_key;
 
+reg [15:0] joydb9md_1,joydb9md_2;
+joy_db9md joy_db9md
+(
+  .clk       ( act_cnt[0] ), //35-50MHz
+  .joy_split ( joy_split  ),
+  .joy_mdsel ( joy_mdsel  ),
+  .joy_in    ( joy_in     ),
+  .joystick1 ( joydb9md_1 ),
+  .joystick2 ( joydb9md_2 )	  
+);
+
 hps_io #(.STRLEN($size(CONF_STR)>>3)) hps_io
 (
 	.clk_sys(clk_sys),
@@ -174,7 +189,7 @@ hps_io #(.STRLEN($size(CONF_STR)>>3)) hps_io
 	.conf_str(CONF_STR),
 	.forced_scandoubler(forced_scandoubler),
 
-	.joy_raw(joy_raw),
+	.joy_raw({joydb9md_1[6],joydb9md_1[3:0]}),
 	.buttons(buttons),
 	.status(status),
 	.status_menumask(cfg),

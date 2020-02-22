@@ -3,3 +3,4 @@ set_global_assignment -name SYSTEMVERILOG_FILE ddram.sv
 set_global_assignment -name VERILOG_FILE lfsr.v
 set_global_assignment -name SYSTEMVERILOG_FILE cos.sv
 set_global_assignment -name SYSTEMVERILOG_FILE menu.sv
+set_global_assignment -name VERILOG_FILE joydb9md.v
