@@ -117,11 +117,15 @@ module emu
 	// 1 - D-/TX
 	// 2..6 - USR2..USR6
 	// Set USER_OUT to 1 to read from USER_IN.
-	input   [6:0] USER_IN,
-	output  [6:0] USER_OUT,
+   output  	     USER_OSD,
+	input   [7:0] USER_IN,
+	output  [7:0] USER_OUT,
 
 	input         OSD_STATUS
 );
+wire [5:0] joy_raw = {USER_IN[6],USER_IN[3],USER_IN[5],USER_IN[7],USER_IN[1],USER_IN[2]};
+
+assign USER_OSD = joy_raw[5];
 
 assign ADC_BUS  = 'Z;
 assign USER_OUT = '1;
@@ -170,6 +174,7 @@ hps_io #(.STRLEN($size(CONF_STR)>>3)) hps_io
 	.conf_str(CONF_STR),
 	.forced_scandoubler(forced_scandoubler),
 
+	.joy_raw(joy_raw),
 	.buttons(buttons),
 	.status(status),
 	.status_menumask(cfg),
