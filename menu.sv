@@ -132,16 +132,18 @@ wire   [2:0] JOY_FLAG = {db9md_ena,~db9md_ena,1'b0};   //Assign 3 bits of status
 wire         JOY_CLK, JOY_LOAD, JOY_SPLIT, JOY_MDSEL;
 wire   [5:0] JOY_MDIN  = JOY_FLAG[2] ? {USER_IN[6],USER_IN[3],USER_IN[5],USER_IN[7],USER_IN[1],USER_IN[2]} : '1;
 wire         JOY_DATA  = JOY_FLAG[1] ? USER_IN[5] : '1;
-assign       USER_OUT  = JOY_FLAG[2] ? {3'b111,JOY_SPLIT,3'b111,JOY_MDSEL} : JOY_FLAG[1] ? {5'b11111,JOY_CLK,JOY_LOAD} : '1;
+assign       USER_OUT  = JOY_FLAG[2] ? {3'b111,JOY_SPLIT,3'b111,JOY_MDSEL} : JOY_FLAG[1] ? {6'b111111,JOY_CLK,JOY_LOAD} : '1;
 assign       USER_MODE = JOY_FLAG[2:1] ;
 assign       USER_OSD  = joydb_1[10] & joydb_1[6];
 
 reg db9md_ena=1'b0;
-always @(posedge CLK_50M) begin
-	reg db9_status, db9_status_r;
+reg db9_status = 1'b1, db9_status_r = 1'b1;
+
+always @(posedge act_cnt[1]) begin
 	db9_status <= USER_IN[7];
 	db9_status_r <= db9_status;
-	if(db9_status == 1'b1 && db9_status_r == 1'b0) db9md_ena <= 1'b1;
+	//if(db9_status == 1'b0) & db9_status_r == 1'b0) db9md_ena <= 1'b1;
+	if(~USER_IN[7]) db9md_ena <= 1'b1;
 end
 
 assign {UART_RTS, UART_TXD, UART_DTR} = 0;
