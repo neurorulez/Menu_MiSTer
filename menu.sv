@@ -184,18 +184,20 @@ assign       USER_OUT  = JOY_FLAG[2] ? {3'b111,JOY_SPLIT,3'b111,JOY_MDSEL} : JOY
 assign       USER_MODE = JOY_FLAG[2:1] ;
 assign       USER_OSD  = JOY_DB1[10] & JOY_DB1[6];
 
+reg db15_disable = 1'b0;
 reg  db9md_ena=1'b0;
 reg  db9_1p_ena=1'b0,db9_2p_ena=1'b0;
 wire db9_status = db9md_ena ? 1'b1 : USER_IN[7];
 always @(posedge clk_sys) 
  begin
-	if(~db9md_ena & ~db9_status) db9md_ena <= 1'b1; 
-   if(JOYDB9MD_1[2] || JOYDB15_1[2]) db9_1p_ena <= 1'b1;
+	if(~db9md_ena & ~db9_status) db9md_ena <= 1'b1;
+	if(~USER_IN[6]) db15_disable <= 1'b1;
+	if(JOYDB9MD_1[2] || JOYDB15_1[2]) db9_1p_ena <= 1'b1;
 	if(~JOYDB9MD_1[2] && JOYDB9MD_2[2] || JOYDB15_2[2]) db9_2p_ena <= 1'b1; //Se niega el del player 1 por si no hay Splitter que no se duplique
  end
 
-wire [15:0] JOY_DB1 = db9_1p_ena | db9_2p_ena ? db9md_ena ? JOYDB9MD_1 : JOYDB15_1 : 0;
-wire [15:0] JOY_DB2 = db9_1p_ena | db9_2p_ena ? db9md_ena ? JOYDB9MD_2 : JOYDB15_2 : 0;
+wire [15:0] JOY_DB1 = db9_1p_ena | db9_2p_ena ? db9md_ena ? JOYDB9MD_1 : ~db15_disable ? JOYDB15_1 : 0 : 0;
+wire [15:0] JOY_DB2 = db9_1p_ena | db9_2p_ena ? db9md_ena ? JOYDB9MD_2 : ~db15_disable ? JOYDB15_2 : 0 : 0;
 
 reg [15:0] JOYDB9MD_1,JOYDB9MD_2;
 joy_db9md joy_db9md
